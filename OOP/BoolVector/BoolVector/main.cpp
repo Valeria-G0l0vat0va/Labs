@@ -11,7 +11,7 @@ int main()
 {
     srand(time(0));
 
-    BoolVector bv("101011000000");
+    BoolVector bv("101011000001");
     std::cout << "bv: " << bv << " , weight = " << bv.weight() << std::endl;
 
     // Создаем вектор из строки битов
@@ -67,13 +67,13 @@ int main()
     BoolVector bv12 = bv ^= bv1;
     std::cout << "bv12: " << bv12 << std::endl;
 
-    BoolVector bv13 = bv <<= 3;
+    BoolVector bv13 = bv1 <<= 3;
     std::cout << "bv13: " << bv13 << std::endl;
 
-    BoolVector bv14 = bv2 >>= 3;
+    BoolVector bv14 = bv1 >>= 3;
     std::cout << "bv14: " << bv14 << std::endl;
 
-    BoolVector bv15 = (bv3 = bv);
+    BoolVector bv15 = bv3;
     std::cout << "bv15: " << bv15 << std::endl;
 
     return 0;
