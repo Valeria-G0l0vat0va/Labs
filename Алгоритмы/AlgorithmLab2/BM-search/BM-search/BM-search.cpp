@@ -2,70 +2,118 @@
 #include <string>
 #include <vector>
 
-int findFirst(const std::string& text, const std::string& pattern) {
-    for (size_t i = 0; i <= text.length() - pattern.length(); ++i) {
-        bool found = true;
-        for (size_t j = 0; j < pattern.length(); ++j) {
-            if (text[i + j] != pattern[j]) {
-                found = false;
-                break;
-            }
-        }
-        if (found) return i;
+void Tab(const std::string& p, int TAB[256]) {
+    int m = p.length();
+    for (int i = 0; i < 256; i++) {
+        TAB[i] = m;
     }
-    return -1;
+    for (int i = 0; i < m - 1; i++) {
+        TAB[p[i]] = m - 1 - i;
+    }
 }
 
-std::vector<int> findAll(const std::string& text, const std::string& pattern) {
-    std::vector<int> positions;
-    for (size_t i = 0; i <= text.length() - pattern.length(); ++i) {
-        bool found = true;
-        for (size_t j = 0; j < pattern.length(); ++j) {
-            if (text[i + j] != pattern[j]) {
-                found = false;
-                break;
-            }
+int BM_search(const std::string& s, const std::string& p) {
+    int n = s.length();
+    int m = p.length();
+    if (m == 0) return 0;
+    if (n < m) return -1; 
+
+    int TAB[256];
+    Tab(p, TAB);
+
+    int i = m - 1;
+    int j = m - 1;
+    while (i < n) {
+        int k = i;
+        j = m - 1;
+        while (j >= 0 && s[k] == p[j]) {
+            k--;
+            j--;
         }
-        if (found) positions.push_back(i);
+        if (j < 0) {
+            return k + 1; 
+        }
+        i += TAB[s[i]]; 
     }
-    return positions;
+    return -1; 
 }
 
-std::vector<int> findAllInRange(const std::string& text, const std::string& pattern, int start, int end) {
-    std::vector<int> positions;
-    if (start < 0 || end >= text.length() || start > end) return positions;
-    for (size_t i = start; i <= end - pattern.length(); ++i) {
-        bool found = true;
-        for (size_t j = 0; j < pattern.length(); ++j) {
-            if (text[i + j] != pattern[j]) {
-                found = false;
-                break;
-            }
+std::vector<int> BM_search_all(const std::string& s, const std::string& p) {
+    std::vector<int> index;
+    int n = s.length();
+    int m = p.length();
+    if (m == 0) return index; 
+    if (n < m) return index; 
+
+    int TAB[256];
+    Tab(p, TAB);
+
+    int i = m - 1;
+    while (i < n) {
+        int k = i;
+        int j = m - 1;
+        while (j >= 0 && s[k] == p[j]) {
+            k--;
+            j--;
         }
-        if (found) positions.push_back(i);
+        if (j < 0) {
+            index.push_back(k + 1);
+            i += m; 
+        }
+        else {
+            i += TAB[s[i]]; 
+        }
     }
-    return positions;
+    return index; 
+}
+
+std::vector<int> BM_search_range(const std::string& s, const std::string& p, int start, int end) {
+    std::vector<int> index;
+    int n = s.length();
+    int m = p.length();
+    if (m == 0 || start < 0 || end < start || end >= n) return index; 
+
+    int TAB[256];
+    Tab(p, TAB);
+
+    int i = start + m - 1;
+    while (i <= end) {
+        int k = i;
+        int j = m - 1;
+        while (j >= 0 && s[k] == p[j]) {
+            k--;
+            j--;
+        }
+        if (j < 0) {
+            index.push_back(k + 1); 
+            i += m; 
+        }
+        else {
+            i += TAB[s[i]]; 
+        }
+    }
+    return index; 
 }
 
 int main() {
-    std::string text = "std::move_iterator is an iterator adaptor which behaves exactly like the underlying iterator";
-    std::string pattern = "tor";
+    std::string text = "Mom was washing the frame. The grass was cleaned up this morning";
+    std::string pattern = "was";
 
-    std::cout << "First occurrence: " << findFirst(text, pattern) << std::endl; 
+    int firstIndex = BM_search(text, pattern);
+    std::cout << "First occurrence index: " << firstIndex << std::endl;
 
-    std::vector<int> allOccurrences = findAll(text, pattern);
-    std::cout << "All occurrences: ";
-    for (int index : allOccurrences) std::cout << index << " "; 
+    std::vector<int> allIndices = BM_search_all(text, pattern);
+    std::cout << "All occurrence indices: ";
+    for (int index : allIndices) {
+        std::cout << index << " ";
+    }
     std::cout << std::endl;
 
-    std::vector<int> occurrencesInRange = findAllInRange(text, pattern, 17, 91);
-    std::cout << "Occurrences in range (17-91): ";
-    for (int index : occurrencesInRange) std::cout << index << " "; 
-    std::cout << std::endl;
-
-    std::vector<int> occurrencesInRange2 = findAllInRange(text, pattern, 28, 36);
-    std::cout << "Occurrences in range (28-36): ";
-    for (int index : occurrencesInRange2) std::cout << index << " "; 
+    std::vector<int> rangeIndices = BM_search_range(text, pattern, 15, 40);
+    std::cout << "Occurrence indices in range: ";
+    for (int index : rangeIndices) {
+        std::cout << index << " ";
+    }
     std::cout << std::endl;
 
     return 0;
