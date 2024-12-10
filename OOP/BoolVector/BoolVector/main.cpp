@@ -10,6 +10,17 @@
 int main()
 {
     srand(time(0));
+    {
+        BoolVector dummy(20, 1);
+        for (int i = 0; i < dummy.length(); ++i)
+        {
+            std::cout << (dummy << i) << "\n";
+        }
+        for (int i = 0; i < dummy.length(); ++i)
+        {
+            std::cout << (dummy >> i) << "\n";
+        }
+    }
 
     BoolVector bv("101011000001");
     std::cout << "bv: " << bv << " , weight = " << bv.weight() << std::endl;

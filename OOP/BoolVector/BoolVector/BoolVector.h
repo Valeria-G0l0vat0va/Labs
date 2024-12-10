@@ -22,6 +22,7 @@ public:
     void swap(BoolVector& other);
     void invert();
     bool bitValue(int index) const;
+    bool getBitValue(int index) const;
     void setBitValue(int index, bool value);
     void invertBit(int index);
     void setBit(int index, bool value);
@@ -30,7 +31,7 @@ public:
     int weight() const;
 
     Rank operator[](int index);
-
+    const Rank operator[](int index)const;
 
     BoolVector operator&(const BoolVector& other) const;
     BoolVector& operator&=(const BoolVector& other);

@@ -100,6 +100,13 @@ bool BoolVector::bitValue(int index) const
     return m_cells[index / CellSize] & mask;
 }
 
+bool BoolVector::getBitValue(int index) const {
+    assert(index >= 0 && index < m_bitCount);
+    Cell mask = 1;
+    mask <<= CellSize - 1 - (index % CellSize);
+    return (m_cells[index / CellSize] & mask) != 0;
+}
+
 void BoolVector::setBitValue(int index, bool value)
 {
     assert(index >= 0 && index < m_bitCount);
@@ -222,48 +229,89 @@ BoolVector& BoolVector::operator^=(const BoolVector& other)
     return *this;
 }
 
-BoolVector BoolVector::operator<<(int shift) const
-{
-    assert(shift >= 0);
+BoolVector BoolVector::operator<<(int shift) const {
+    if (shift < 0) {
+        throw std::invalid_argument("Shift must be non-negative");
+    }
+    if (shift >= m_bitCount) {
+        return BoolVector(m_bitCount); 
+    }
 
     BoolVector result(m_bitCount);
-    for (int i = 0; i < m_cellCount; i++)
-    {
-        result.m_cells[i] = m_cells[i] << shift;
+    for (int i = 0; i < m_bitCount - shift; ++i) {
+        result.setBitValue(i + shift, getBitValue(i));
     }
     return result;
 }
 
-BoolVector BoolVector::operator>>(int shift) const
-{
-    assert(shift >= 0);
+BoolVector BoolVector::operator>>(int shift) const {
+    if (shift < 0) {
+        throw std::invalid_argument("Shift must be non-negative");
+    }
+    if (shift >= m_bitCount) {
+        return BoolVector(m_bitCount); 
+    }
 
     BoolVector result(m_bitCount);
-    for (int i = 0; i < m_cellCount; i++)
-    {
-        result.m_cells[i] = m_cells[i] >> shift;
+    for (int i = 0; i < m_bitCount - shift; ++i) {
+        result.setBitValue(i, getBitValue(i + shift));
     }
     return result;
 }
 
-BoolVector& BoolVector::operator<<=(int shift)
-{
-    assert(shift >= 0);
-
-    for (int i = 0; i < m_cellCount; i++)
-    {
-        m_cells[i] <<= shift;
+BoolVector& BoolVector::operator<<=(int shift) {
+    if (shift < 0) {
+        throw std::invalid_argument("Shift must be non-negative");
+    }
+    if (shift >= m_bitCount) {
+        for (int i = 0; i < m_cellCount; ++i) {
+            m_cells[i] = 0;
+        }
+        return *this;
+    }
+    for (int i = 0; i < m_cellCount; ++i) {
+        if (i + shift / CellSize < m_cellCount)
+            m_cells[i + shift / CellSize] |= (m_cells[i] << (shift % CellSize));
+    }
+    for (int i = 0; i < shift / CellSize; ++i) {
+        m_cells[i] = 0;
+    }
+    int remainingBits = shift % CellSize;
+    if (remainingBits > 0) {
+        for (int i = m_cellCount - 1; i >= 0; --i) {
+            int shift_needed = std::min(remainingBits, CellSize - (m_bitCount - i * CellSize));
+            if (shift_needed == 0) break;
+            m_cells[i] >>= shift_needed;
+        }
     }
     return *this;
 }
 
-BoolVector& BoolVector::operator>>=(int shift)
-{
-    assert(shift >= 0);
-
-    for (int i = 0; i < m_cellCount; i++)
-    {
-        m_cells[i] >>= shift;
+BoolVector& BoolVector::operator>>=(int shift) {
+    if (shift < 0) {
+        throw std::invalid_argument("Shift must be non-negative");
+    }
+    if (shift >= m_bitCount) {
+        for (int i = 0; i < m_cellCount; ++i) {
+            m_cells[i] = 0;
+        }
+        return *this;
+    }
+    for (int i = m_cellCount - 1; i >= 0; --i) {
+        if (i - shift / CellSize >= 0)
+            m_cells[i - shift / CellSize] |= (m_cells[i] >> (shift % CellSize));
+    }
+    int remaining_cells = shift / CellSize;
+    for (int i = m_cellCount - 1; i >= m_cellCount - remaining_cells; --i) {
+        m_cells[i] = 0;
+    }
+    int remainingBits = shift % CellSize;
+    if (remainingBits > 0) {
+        for (int i = 0; i < m_cellCount; ++i) {
+            int shift_needed = std::min(remainingBits, CellSize - (i * CellSize));
+            if (shift_needed == 0) break;
+            m_cells[i] <<= shift_needed;
+        }
     }
     return *this;
 }
@@ -303,6 +351,13 @@ BoolVector::Rank BoolVector::operator[](int index)
     assert(index >= 0 && index < m_length);
     return Rank(&m_cells[index / CellSize], _mask(index));
 }
+
+const BoolVector::Rank BoolVector::operator[](int index) const
+{
+    assert(index >= 0 && index < m_length);
+    return Rank(&m_cells[index / CellSize], _mask(index));
+}
+
 
 int BoolVector::_excessRankCount() const
 {
@@ -346,8 +401,6 @@ BoolVector::Rank::operator bool() const
 {
     return (*m_cell & m_mask) != 0;
 }
-
-
 
 
 std::ostream& operator<<(std::ostream& stream, const BoolVector& bv)
