@@ -1,134 +1,163 @@
 ﻿#include <iostream>
-#include <ctime>
 #include <cstdlib>
-#include <algorithm>
-#include <chrono>
-#include<Windows.h>
+#include <ctime>
+#include <limits>
+#include <cmath>
 
-using namespace std;
-using namespace chrono;
-
-int minCost = INT_MAX;
-int bestPath[10];
-int currentPath[10];
-bool visited[10];
-
-void generate_matrix(int matrix[][10], int size) {
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
+void RandMas(int cost_matrix[100][100], int n) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
             if (i == j) {
-                matrix[i][j] = 0; 
+                cost_matrix[i][j] = 0;
             }
             else {
-                matrix[i][j] = rand() % 100 + 1; 
+                cost_matrix[i][j] = std::rand() % 100 + 1;
             }
         }
     }
 }
 
-void print_matrix(int matrix[][10], int size) {
-    cout << "Матрица смежности:" << endl;
-    for (int i = 0; i < size; i++) {
-        for (int j = 0; j < size; j++) {
-            cout << matrix[i][j] << " ";
-        }
-        cout << endl;
-    }
-}
+void CompleteEnumeration(int index, int visited, int n, int start_city, int& min_cost, int& max_cost, int current_cost, int cost_matrix[100][100], int current_route[100], int& route_index, int best_route[100], bool print_route) {
+    if (visited == (1 << n) - 1) {
+        int total_cost = current_cost + cost_matrix[index][start_city];
 
-
-void findHamiltonianCycle(int pos, int cost, int count, int matrix[][10], int size) {
-    if (count == size && matrix[pos][0]) {
-        if (cost + matrix[pos][0] < minCost) {
-            minCost = cost + matrix[pos][0];
-            for (int i = 0; i < size; i++) {
-                bestPath[i] = currentPath[i];
+        if (total_cost < min_cost) {
+            min_cost = total_cost;
+            for (int i = 0; i < route_index; i++) {
+                best_route[i] = current_route[i];
             }
-            bestPath[size] = 0; 
+            best_route[route_index] = start_city; 
+        }
+
+        if (total_cost > max_cost) {
+            max_cost = total_cost;
+        }
+
+        if (print_route) {
+            std::cout << "Route: ";
+            std::cout << start_city + 1 << " -> ";
+            for (int i = 0; i < route_index; ++i) {
+                std::cout << current_route[i] + 1;
+                if (i < route_index - 1) {
+                    std::cout << " -> ";
+                }
+            }
+            std::cout << " -> " << start_city + 1 << " (cost: " << total_cost << ")" << std::endl;
         }
         return;
     }
-    for (int i = 0; i < size; i++) {
-        if (!visited[i] && matrix[pos][i]) {
-            visited[i] = true; 
-            currentPath[count] = i; 
-            findHamiltonianCycle(i, cost + matrix[pos][i], count + 1, matrix, size); 
-            visited[i] = false; 
+
+    for (int city = 0; city < n; ++city) {
+        if (!(visited & (1 << city))) {
+            current_route[route_index++] = city; 
+
+            CompleteEnumeration(city, visited | (1 << city), n, start_city, min_cost, max_cost, current_cost + cost_matrix[index][city], cost_matrix, current_route, route_index, best_route, print_route);
+
+            route_index--; 
         }
     }
 }
 
-int algorithmGreedy(int matrix[][10], int n) {
-    bool visited[10] = { false }; 
-    int totalCost = 0;
-    int curr = 0; 
-    for (int i = 0; i < n; ++i) {
-        visited[curr] = true; 
-        int next = -1;
-        int minCost = INT_MAX;
-        for (int j = 0; j < n; ++j) {
-            if (!visited[j] && matrix[curr][j] < minCost) {
-                minCost = matrix[curr][j];
-                next = j;
+int Heuristic_GreedyAlgorithm(int start_city, int cost_matrix[100][100], int greedy_route[100], int& greedy_cost, int n) {
+    bool visited[100] = { false };
+    greedy_route[0] = start_city; 
+    visited[start_city] = true; 
+
+    int current_city = start_city;
+
+    for (int i = 1; i < n; ++i) {
+        int next_city = -1;
+        int min_cost = std::numeric_limits<int>::max();
+
+        for (int city = 0; city < n; ++city) {
+            if (!visited[city] && cost_matrix[current_city][city] < min_cost) {
+                min_cost = cost_matrix[current_city][city];
+                next_city = city;
             }
         }
-        if (next != -1) { 
-            totalCost += minCost;
-            curr = next;
+
+        if (next_city == -1) {
+            return -1; 
         }
+
+        greedy_route[i] = next_city;
+        visited[next_city] = true;
+        greedy_cost += min_cost;
+        current_city = next_city;
     }
-    totalCost += matrix[curr][0]; 
-    return totalCost;
+
+    greedy_cost += cost_matrix[current_city][start_city]; 
+    greedy_route[n] = start_city; 
+    return greedy_cost;
 }
 
 int main() {
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
-    const int sizes[] = { 4,6,8,10 };
-    const int numRuns = 3;
-    clock_t start, stop;
+    srand(time(0));
 
-    for (int s : sizes) {
-        cout << "Размер матрицы: " << s << "x" << s << endl;
-        for (int run = 1; run <= numRuns; run++) {
-            int matrix[10][10];
-            generate_matrix(matrix, s); 
-            print_matrix(matrix, s);
+    for (int i = 0; i < 3; ++i) { 
+        int n;
+        int start_city;
 
-            for (int i = 0; i < 10; i++) {
-                visited[i] = false;
-            }
-            visited[0] = true;
-            minCost = INT_MAX;
+        std::cout << "Enter the number of cities for set " << i + 1 << ": ";
+        std::cin >> n;
 
-            start = clock();
-            currentPath[0] = 0;
-            findHamiltonianCycle(0, 0, 1, matrix, s);
-            stop = clock();
-            double duration1 = double(stop - start) / CLOCKS_PER_SEC;
-
-            start = clock();
-            int heuristicCost = algorithmGreedy(matrix, s);
-            stop = clock();
-            double duration2 = double(stop - start) / CLOCKS_PER_SEC;
-            int percentQuality = 0;
-            if (minCost != INT_MAX) {
-                if (heuristicCost == 0) {
-                    percentQuality = 100;
-                }
-                else {
-                    percentQuality = ((heuristicCost - minCost) * 100) / heuristicCost;
-                }
-            }
-
-            cout << "Launch " << run << ":" << endl;
-            cout << "Best result1: " << minCost << endl;
-            cout << "Время работы точного алгоритма: " << duration1 << " sec" << endl;
-            cout << "Result (heuristic algorithm): " << heuristicCost << endl;
-            cout << "Heuristic algorithm running time: " << duration2 << " sec" << endl;
-            cout << "Solution quality of heuristic algorithm: " << percentQuality << "%" << endl << endl;
+        std::cout << "Enter the starting city(from 1 to " << n << ") : ";
+        std::cin >> start_city;
+        if (start_city < 1 || start_city > n) {
+            std::cout << "No such city exists." << std::endl;
+            return 1;
         }
-        cout << endl;
+
+        start_city--; 
+
+        std::cout << "Set " << i + 1 << std:: endl;
+
+        for (int j = 0; j < 3; ++j) { 
+            std::cout << "Matrix: " << j + 1 << std::endl;
+
+            int cost_matrix[100][100];
+            RandMas(cost_matrix, n);
+
+            for (int a = 0; a < n; ++a) {
+                for (int b = 0; b < n; ++b) {
+                    std::cout << cost_matrix[a][b] << '\t';
+                }
+                std::cout << std::endl;
+            }
+
+            bool print_route;
+            std::cout << "Do you want to see the current route? (1 - yes, 0 - no): ";
+            std::cin >> print_route;
+
+            int min_cost = std::numeric_limits<int>::max();
+            int max_cost = std::numeric_limits<int>::min();
+            int current_route[100];
+            int best_route[100];
+            int route_index = 0;
+
+            unsigned int start_time = clock();
+            CompleteEnumeration(start_city, 1 << start_city, n, start_city, min_cost, max_cost, 0, cost_matrix, current_route, route_index, best_route, print_route);
+            unsigned int end_time = clock();
+            unsigned int elapsed_time = end_time - start_time;
+
+            std::cout << "Minimum cost of complete enumeration:" << min_cost << std::endl;
+            std::cout << "Maximum cost of complete enumeration: " << max_cost << std:: endl;
+            std::cout << "Complete enumeration execution time: " << elapsed_time << " sec" << std::endl;
+
+            int greedy_route[100 + 1]; 
+            int greedy_cost = 0;
+
+            start_time = clock();
+            Heuristic_GreedyAlgorithm(start_city, cost_matrix, greedy_route, greedy_cost, n);
+            end_time = clock();
+            elapsed_time = end_time - start_time;
+
+            std::cout << " (greedy algorithm cost: " << greedy_cost << ")" << std::endl;
+            std::cout << "Greedy algorithm execution time: " << elapsed_time << " sec" << std::endl;
+            float percent = std::abs(100 - ((100 * greedy_cost - 100 * min_cost) / (max_cost - min_cost)));
+            std::cout << "Solution quality: " << percent << "%" << std::endl;
+            std::cout << std::endl;
+        }
     }
     return 0;
 }
