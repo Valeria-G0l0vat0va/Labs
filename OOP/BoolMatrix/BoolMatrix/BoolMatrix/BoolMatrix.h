@@ -1,5 +1,5 @@
 #pragma once
-#include "BoolVector.h"
+#include "../../../BoolVector/BoolVector/BoolVector.h"
 #include <iostream>
 #include <cstring>
 #include <stdexcept>
@@ -46,7 +46,7 @@ public:
 private:
     int m_rows;
     int m_cols;
-    BoolVector** m_matrix;
+    BoolVector* m_matrix = nullptr;
 };
 std::ostream& operator<<(std::ostream& os, const BoolMatrix& matrix);
 std::istream& operator>>(std::istream& is, BoolMatrix& matrix);
