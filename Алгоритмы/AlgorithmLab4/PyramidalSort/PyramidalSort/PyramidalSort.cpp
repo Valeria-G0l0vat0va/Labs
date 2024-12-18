@@ -1,7 +1,7 @@
 ﻿#include <iostream>
 #include <cstdlib>
-#include <ctime> 
-#include <chrono> 
+#include <ctime>
+#include <chrono>
 #include <fstream>
 
 void RandMas(int* mas, int n, int a, int b)
@@ -55,8 +55,8 @@ int main() {
     srand(time(0));
 
     int size1 = 10;
-    int size2 = 20;
-    int size3 = 30;
+    int size2 = 25;
+    int size3 = 300;
     int* arr1 = new int[size1];
     int* arr2 = new int[size2];
     int* arr3 = new int[size3];
@@ -86,6 +86,21 @@ int main() {
     pyramidalSort(arr1, size1);
     pyramidalSort(arr2, size2);
     pyramidalSort(arr3, size3);
+
+    auto start1 = std::chrono::high_resolution_clock::now();
+    pyramidalSort(arr1, size1);
+    auto end1 = std::chrono::high_resolution_clock::now();
+    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+
+    auto start2 = std::chrono::high_resolution_clock::now();
+    pyramidalSort(arr2, size2);
+    auto end2 = std::chrono::high_resolution_clock::now();
+    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+
+    auto start3 = std::chrono::high_resolution_clock::now();
+    pyramidalSort(arr3, size3);
+    auto end3 = std::chrono::high_resolution_clock::now();
+    auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(end3 - start3);
 
     std::ofstream file1_sorted("array1_sorted.txt");
     std::ofstream file2_sorted("array2_sorted.txt");
@@ -122,6 +137,10 @@ int main() {
         std::cout << arr3[i] << " ";
     }
     std::cout << std::endl;
+
+    std::cout << "Time taken to sort array 1: " << duration1.count() << " microseconds" << std::endl;
+    std::cout << "Time taken to sort array 2: " << duration2.count() << " microseconds" << std::endl;
+    std::cout << "Time taken to sort array 3: " << duration3.count() << " microseconds" << std::endl;
 
     delete[] arr1;
     delete[] arr2;
