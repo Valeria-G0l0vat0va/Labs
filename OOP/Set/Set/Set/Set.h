@@ -3,11 +3,10 @@
 #include <iostream>
 
 
-class Set {
+
+class Set : public BoolVector{
 
 private:
-    bool* data;
-    size_t size;
 
 public:
     Set();
@@ -16,7 +15,7 @@ public:
     Set(const Set& other);
     ~Set();
     void add(char c);
-    bool contains(char c) const;
+    int contains(char c) const;
     size_t getCardinality() const;
 
     Set& operator=(const Set& other);

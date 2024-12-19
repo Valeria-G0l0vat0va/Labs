@@ -1,14 +1,8 @@
 ﻿#include "Set.h"
 
-Set::Set() : size(256) {
-    data = new bool[size];
-    for (size_t i = 0; i < size; ++i) data[i] = false;
-}
+Set::Set() : BoolVector(256) {}
 
-Set::Set(size_t maxSize) : size(maxSize) {
-    data = new bool[size];
-    for (size_t i = 0; i < size; ++i) data[i] = false;
-}
+Set::Set(size_t maxSize) : BoolVector(maxSize) {}
 
 Set::Set(const char* arr) : Set(256) {
     for (size_t i = 0; arr[i] != '\0'; ++i) {
@@ -16,25 +10,21 @@ Set::Set(const char* arr) : Set(256) {
     }
 }
 
-Set::Set(const Set& other) : size(other.size) {
-    data = new bool[size];
-    for (size_t i = 0; i < size; ++i) {
-        data[i] = other.data[i];
+Set::Set(const Set& other) : BoolVector(other) {}
+
+Set::~Set() {}
+
+int Set::contains(char c) const {
+    if (c < 0 || c >= length()) {
+        throw std::out_of_range("Character out of range for this set.");
     }
-}
-
-Set::~Set() {
-    delete[] data;
-}
-
-bool Set::contains(char c) const {
-    return (c >= 0 && c < size) && data[c];
+    return getBitValue(c);
 }
 
 size_t Set::getCardinality() const {
     size_t count = 0;
-    for (size_t i = 0; i < size; ++i) {
-        if (data[i]) {
+    for (int i = 0; i < length(); ++i) {
+        if (getBitValue(i)) {
             count++;
         }
     }
@@ -42,24 +32,23 @@ size_t Set::getCardinality() const {
 }
 
 void Set::add(char c) {
-    if (c >= 0 && c < size) {
-        data[c] = true;
+    if (c < 0 || c >= length()) {
+        throw std::out_of_range("Character out of range for this set.");
     }
-    else {
-        std::cerr << "Warning: Character out of range." << std::endl;
-    }
+    setBitValue(c, true);
 }
 
 Set& Set::operator=(const Set& other) {
-    for (int i = 0; i < 256; ++i) {
-        data[i] = other.data[i];
+    if (this != &other) {
+        BoolVector::operator=(other); 
     }
     return *this;
 }
 
 bool Set::operator==(const Set& other) const {
-    for (int i = 0; i < 256; ++i) {
-        if (data[i] != other.data[i]) return false;
+    if (length() != other.length()) return false;
+    for (int i = 0; i < length(); ++i) {
+        if (getBitValue(i) != other.getBitValue(i)) return false;
     }
     return true;
 }
@@ -69,33 +58,33 @@ bool Set::operator!=(const Set& other) const {
 }
 
 Set Set::operator|(const Set& other) const {
-    Set result;
-    for (int i = 0; i < 256; ++i) {
-        result.data[i] = data[i] || other.data[i];
+    Set result(std::max(length(), other.length()));
+    for (int i = 0; i < result.length(); ++i) {
+        result.setBitValue(i, getBitValue(i) || other.getBitValue(i));
     }
     return result;
 }
 
 Set Set::operator&(const Set& other) const {
-    Set result;
-    for (int i = 0; i < 256; ++i) {
-        result.data[i] = data[i] && other.data[i];
+    Set result(std::max(length(), other.length()));
+    for (int i = 0; i < result.length(); ++i) {
+        result.setBitValue(i, getBitValue(i) && other.getBitValue(i));
     }
     return result;
 }
 
 Set Set::operator/(const Set& other) const {
-    Set result;
-    for (int i = 0; i < 256; ++i) {
-        result.data[i] = data[i] && !other.data[i];
+    Set result(length());
+    for (int i = 0; i < length(); ++i) {
+        result.setBitValue(i, getBitValue(i) && !other.getBitValue(i));
     }
     return result;
 }
 
 Set Set::operator~() const {
-    Set result(size);
-    for (size_t i = 0; i < size; ++i) {
-        result.data[i] = !data[i];
+    Set result(length());
+    for (int i = 0; i < length(); ++i) {
+        result.setBitValue(i, !getBitValue(i));
     }
     return result;
 }
@@ -107,13 +96,10 @@ Set Set::operator+(char c) const {
 }
 
 void Set::print() const {
-    std::cout << "{";
-    bool first = true;
-    for (size_t i = 0; i < size; ++i) {
-        if (data[i]) { 
-            if (!first) std::cout << ", ";
-            std::cout << (char)i;
-            first = false;
+    std::cout << "{ ";
+    for (size_t i = 0; i < length(); ++i) {
+        if (getBitValue(i)) {
+            std::cout << i << " ";
         }
     }
     std::cout << "}" << std::endl;
