@@ -4,7 +4,7 @@
 #include <limits>
 #include <cmath>
 
-void RandMas(int cost_matrix[100][100], int n) {
+void RandMas(int** cost_matrix, int n) {
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++) {
             if (i == j) {
@@ -17,7 +17,7 @@ void RandMas(int cost_matrix[100][100], int n) {
     }
 }
 
-void CompleteEnumeration(int index, int visited, int n, int start_city, int& min_cost, int& max_cost, int current_cost, int cost_matrix[100][100], int current_route[100], int& route_index, int best_route[100], bool print_route) {
+void CompleteEnumeration(int index, int visited, int n, int start_city, int& min_cost, int& max_cost, int current_cost, int** cost_matrix, int* current_route, int& route_index, int* best_route, bool print_route) {
     if (visited == (1 << n) - 1) {
         int total_cost = current_cost + cost_matrix[index][start_city];
 
@@ -58,7 +58,7 @@ void CompleteEnumeration(int index, int visited, int n, int start_city, int& min
     }
 }
 
-int Heuristic_GreedyAlgorithm(int start_city, int cost_matrix[100][100], int greedy_route[100], int& greedy_cost, int n) {
+int Heuristic_GreedyAlgorithm(int start_city, int** cost_matrix, int* greedy_route, int& greedy_cost, int n) {
     bool visited[100] = { false };
     greedy_route[0] = start_city; 
     visited[start_city] = true; 
@@ -94,28 +94,32 @@ int Heuristic_GreedyAlgorithm(int start_city, int cost_matrix[100][100], int gre
 int main() {
     srand(time(0));
 
-    for (int i = 0; i < 3; ++i) { 
+    for (int i = 0; i < 3; ++i) {
         int n;
         int start_city;
 
         std::cout << "Enter the number of cities for set " << i + 1 << ": ";
         std::cin >> n;
 
-        std::cout << "Enter the starting city(from 1 to " << n << ") : ";
+        std::cout << "Enter the starting city (from 1 to " << n << "): ";
         std::cin >> start_city;
         if (start_city < 1 || start_city > n) {
             std::cout << "No such city exists." << std::endl;
             return 1;
         }
 
-        start_city--; 
+        start_city--;
 
-        std::cout << "Set " << i + 1 << std:: endl;
+        std::cout << "Set " << i + 1 << std::endl;
 
-        for (int j = 0; j < 3; ++j) { 
+        for (int j = 0; j < 3; ++j) {
             std::cout << "Matrix: " << j + 1 << std::endl;
 
-            int cost_matrix[100][100];
+            int** cost_matrix = new int* [n];
+            for (int a = 0; a < n; a++) {
+                cost_matrix[a] = new int[n];
+            }
+
             RandMas(cost_matrix, n);
 
             for (int a = 0; a < n; ++a) {
@@ -140,11 +144,11 @@ int main() {
             unsigned int end_time = clock();
             unsigned int elapsed_time = end_time - start_time;
 
-            std::cout << "Minimum cost of complete enumeration:" << min_cost << std::endl;
-            std::cout << "Maximum cost of complete enumeration: " << max_cost << std:: endl;
-            std::cout << "Complete enumeration execution time: " << elapsed_time << " sec" << std::endl;
+            std::cout << "Minimum cost of complete enumeration: " << min_cost << std::endl;
+            std::cout << "Maximum cost of complete enumeration: " << max_cost << std::endl;
+            std::cout << "Complete enumeration execution time: " << elapsed_time  << " sec" << std::endl;
 
-            int greedy_route[100 + 1]; 
+            int greedy_route[100 + 1];
             int greedy_cost = 0;
 
             start_time = clock();
@@ -152,11 +156,16 @@ int main() {
             end_time = clock();
             elapsed_time = end_time - start_time;
 
-            std::cout << " (greedy algorithm cost: " << greedy_cost << ")" << std::endl;
-            std::cout << "Greedy algorithm execution time: " << elapsed_time << " sec" << std::endl;
+            std::cout << "Greedy algorithm cost: " << greedy_cost << std::endl;
+            std::cout << "Greedy algorithm execution time: " << elapsed_time  << " sec" << std::endl;
             float percent = std::abs(100 - ((100 * greedy_cost - 100 * min_cost) / (max_cost - min_cost)));
             std::cout << "Solution quality: " << percent << "%" << std::endl;
             std::cout << std::endl;
+
+            for (int a = 0; a < n; a++) {
+                delete[] cost_matrix[a];
+            }
+            delete[] cost_matrix;
         }
     }
     return 0;
