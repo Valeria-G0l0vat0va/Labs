@@ -1,4 +1,5 @@
 ﻿#include "Set.h"
+#include <string> 
 
 Set::Set() : BoolVector(256) {}
 
@@ -14,28 +15,30 @@ Set::Set(const Set& other) : BoolVector(other) {}
 
 Set::~Set() {}
 
-int Set::contains(char c) const {
-    if (c < 0 || c >= length()) {
-        throw std::out_of_range("Character out of range for this set.");
-    }
-    return getBitValue(c);
+bool Set::contains(char element) const {
+    return getBitValue(element);
 }
 
-size_t Set::getCardinality() const {
+void Set::add(char element) {
+    if (element >= 0 && element < length() && !contains(element)) {
+        setBitValue(element, true);
+    }
+}
+
+void Set::remove(char element) {
+    if (contains(element)) {
+        setBitValue(element, false);
+    }
+}
+
+size_t Set::cardinality() const {
     size_t count = 0;
-    for (int i = 0; i < length(); ++i) {
+    for (size_t i = 0; i < 256; ++i) {
         if (getBitValue(i)) {
             count++;
         }
     }
     return count;
-}
-
-void Set::add(char c) {
-    if (c < 0 || c >= length()) {
-        throw std::out_of_range("Character out of range for this set.");
-    }
-    setBitValue(c, true);
 }
 
 Set& Set::operator=(const Set& other) {
@@ -46,9 +49,11 @@ Set& Set::operator=(const Set& other) {
 }
 
 bool Set::operator==(const Set& other) const {
-    if (length() != other.length()) return false;
+    if (length() != other.length()) 
+        return false;
     for (int i = 0; i < length(); ++i) {
-        if (getBitValue(i) != other.getBitValue(i)) return false;
+        if (getBitValue(i) != other.getBitValue(i)) 
+            return false;
     }
     return true;
 }
@@ -65,49 +70,148 @@ Set Set::operator|(const Set& other) const {
     return result;
 }
 
+Set& Set::operator|=(const Set& other) {
+    size_t maxLength = std::max(length(), other.length());
+    for (size_t i = 0; i < maxLength; ++i) {
+        if (i < other.length() && other.getBitValue(i)) {
+            setBitValue(i, true);
+        }
+    }
+    return *this;
+}
+
+
 Set Set::operator&(const Set& other) const {
-    Set result(std::max(length(), other.length()));
-    for (int i = 0; i < result.length(); ++i) {
-        result.setBitValue(i, getBitValue(i) && other.getBitValue(i));
+    size_t maxLength = std::max(length(), other.length());
+    Set result(maxLength);
+    for (size_t i = 0; i < maxLength; ++i) {
+        bool thisBit = false;
+        if (i < length()) {
+            thisBit = getBitValue(i);
+        }
+        bool otherBit = false;
+        if (i < other.length()) {
+            otherBit = other.getBitValue(i);
+        }
+        if (thisBit && otherBit) {
+            result.setBitValue(i, true);
+        }
     }
     return result;
+}
+
+Set& Set::operator&=(const Set& other) {
+    size_t maxLength = std::max(length(), other.length());
+    for (size_t i = 0; i < maxLength; ++i) {
+        bool thisBit = false;
+        if (i < length()) {
+            thisBit = getBitValue(i);
+        }
+        bool otherBit = false;
+        if (i < other.length()) {
+            otherBit = other.getBitValue(i);
+        }
+        if (!(thisBit && otherBit)) {
+            setBitValue(i, false);
+        }
+    }
+    return *this;
 }
 
 Set Set::operator/(const Set& other) const {
     Set result(length());
-    for (int i = 0; i < length(); ++i) {
-        result.setBitValue(i, getBitValue(i) && !other.getBitValue(i));
+    for (size_t i = 0; i < length(); ++i) {
+        bool thisBit = false;
+        if (i < length()) {
+            thisBit = getBitValue(i);
+        }
+        bool otherBit = false;
+        if (i < other.length()) {
+            otherBit = other.getBitValue(i);
+        }
+        if (thisBit && !otherBit) {
+            result.setBitValue(i, true);
+        }
     }
     return result;
 }
 
+Set& Set::operator/=(const Set& other) {
+    for (size_t i = 0; i < length(); ++i) {
+        if (i < other.length() && other.getBitValue(i)) {
+            setBitValue(i, false);
+        }
+    }
+    return *this;
+}
+
 Set Set::operator~() const {
     Set result(length());
-    for (int i = 0; i < length(); ++i) {
-        result.setBitValue(i, !getBitValue(i));
+    for (size_t i = 0; i < length(); ++i) {
+        if (!getBitValue(i)) {
+            result.add(i);
+        }
     }
     return result;
 }
 
 Set Set::operator+(char c) const {
-    Set result = *this;
-    result.add(c);
+    return Set(*this) += c;
+}
+
+
+Set& Set::operator+=(char element) {
+    add(element);
+    return *this;
+}
+
+Set Set::operator-(const Set& other) const {
+    size_t maxLength = std::max(length(), other.length());
+    Set result(maxLength);
+
+    for (size_t i = 0; i < maxLength; ++i) {
+        bool thisBit = false;
+        if (i < length()) {
+            thisBit = getBitValue(i);
+        }
+        bool otherBit = false;
+        if (i < other.length()) {
+            otherBit = other.getBitValue(i);
+        }
+        if (thisBit && !otherBit) {
+            result.setBitValue(i, true);
+        }
+    }
     return result;
 }
 
-void Set::print() const {
-    std::cout << "{ ";
-    for (size_t i = 0; i < length(); ++i) {
-        if (getBitValue(i)) {
-            std::cout << i << " ";
-        }
-    }
-    std::cout << "}" << std::endl;
+Set& Set::operator-=(char element) {
+    remove(element);
+    return *this;
 }
 
-void Set::input() {
-    char c;
-    while (std::cin.get(c) && c != '\n') {  
-        add(c);
+
+std::istream& operator>>(std::istream& stream, Set& bs) {
+    for (size_t i = 0; i < bs.length(); ++i) {
+        bs.setBitValue(i, false); 
     }
+    char c;
+    while (stream.get(c)) { 
+        if (c == '\n') break; 
+        if (c >= 0 && c < bs.length()) {
+            bs.add(c);
+        }
+    }
+    return stream;
+}
+
+std::ostream& operator<<(std::ostream& os, const Set& other) {
+    os << "{ ";
+    for (size_t i = 0; i < other.length(); ++i) {
+        if (other.getBitValue(i)) {
+            os << static_cast<int>(i) << " ";
+        }
+    }
+    os << "}";
+    return os;
 }
