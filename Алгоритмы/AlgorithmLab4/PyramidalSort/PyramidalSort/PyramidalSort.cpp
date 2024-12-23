@@ -54,16 +54,16 @@ bool Sort(int* mas, int n)
 int main() {
     srand(time(0));
 
-    int size1 = 10;
-    int size2 = 25;
-    int size3 = 300;
+    int size1 = 10000;
+    int size2 = 100000;
+    int size3 = 1000000;
     int* arr1 = new int[size1];
     int* arr2 = new int[size2];
     int* arr3 = new int[size3];
 
-    RandMas(arr1, size1, -100, 100);
-    RandMas(arr2, size2, -50, 100);
-    RandMas(arr3, size3, -10, 100);
+    RandMas(arr1, size1, -10, 10);
+    RandMas(arr2, size2, -1000, 1000);
+    RandMas(arr3, size3, -100000, 100000);
 
     std::ofstream file1("array1.txt");
     std::ofstream file2("array2.txt");
