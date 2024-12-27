@@ -1,68 +1,63 @@
-﻿#include "../../../../OOP/BoolMatrix/BoolMatrix/BoolMatrix/BoolMatrix.h" 
-#include <iostream> 
+﻿#include <iostream>
 #include <vector>
-#include <queue>
 
-void TopologicalSort(BoolMatrix& bm) {
-    std::vector<int> result;
-    std::vector<bool> visited(bm.getCols(), false);
-    std::vector<int> inDegree(bm.getCols(), 0); 
+using namespace std;
 
-    for (int col = 0; col < bm.getCols(); ++col) {
-        for (int row = 0; row < bm.getRows(); ++row) {
-            if (bm.get(row, col)) {
-                inDegree[col]++;
-            }
-        }
-    }
+class Graph {
+public:
+    int V; 
+    vector<vector<int>> matrix; 
 
-    std::queue<int> queue;
-    for (int col = 0; col < bm.getCols(); ++col) {
-        if (inDegree[col] == 0) {
-            queue.push(col);
-        }
-    }
+    Graph(int V);
+    void addEdge(int v, int w);
+    void topologicalSort();
+    void topologicalSortUtil(int v, vector<bool>& visited, vector<int>& result);
+};
 
-    while (!queue.empty()) {
-        int current = queue.front();
-        queue.pop(); 
-        result.push_back(current);
-
-        for (int i = 0; i < bm.getRows(); ++i) {
-            if (bm.get(current, i)) {
-                bm.invertComponent(current, i); 
-                inDegree[i]--;
-                if (inDegree[i] == 0) {
-                    queue.push(i);
-                }
-            }
-        }
-    }
-
-    if (result.size() != bm.getCols()) {
-        std::cout << "The graph contains a cycle. Topological sorting is impossible." << std::endl;
-        return;
-    }
-
-    std::cout << "Topological order: ";
-    for (int x : result) {
-        std::cout << x << " ";
-    }
-    std::cout << std::endl;
+Graph::Graph(int V) {
+    this->V = V;
+    matrix.resize(V);
 }
+
+void Graph::addEdge(int v, int w) {
+    matrix[v].push_back(w); 
+}
+
+void Graph::topologicalSortUtil(int v, vector<bool>& visited, vector<int>& result) {
+    visited[v] = true; 
+    for (int i : matrix[v]) {
+        if (!visited[i]) {
+            topologicalSortUtil(i, visited, result);
+        }
+    }
+    result.push_back(v); 
+}
+
+void Graph::topologicalSort() {
+    vector<bool> visited(V, false);
+    vector<int> result; 
+    for (int i = 0; i < V; i++) {
+        if (!visited[i]) {
+            topologicalSortUtil(i, visited, result);
+        }
+    }
+
+    for (int i = result.size() - 1; i >= 0; i--) {
+        cout << result[i] << " ";
+    }
+}
+
 int main() {
-    const int vertices = 6;
-    BoolMatrix bm(vertices, vertices, false);
+    Graph g(6); 
+    g.addEdge(5, 2);
+    g.addEdge(5, 0);
+    g.addEdge(4, 0);
+    g.addEdge(4, 1);
+    g.addEdge(2, 3);
+    g.addEdge(3, 1);
 
-    bm.invertComponent(5, 2);  
-    bm.invertComponent(5, 0); 
-    bm.invertComponent(4, 0); 
-    bm.invertComponent(4, 1);
-    bm.invertComponent(2, 3); 
-    bm.invertComponent(0, 1); 
-    bm.invertComponent(3, 1); 
-
-    TopologicalSort(bm);
+    cout << "Topological Sort Graph: ";
+    g.topologicalSort();
 
     return 0;
 }
