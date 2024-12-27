@@ -2,6 +2,7 @@
 #include"../../../BoolVector/BoolVector/BoolVector.h"
 #include <iostream>
 #include<algorithm>
+#include <stdexcept>
 
 
 class Set : public BoolVector {
@@ -30,8 +31,12 @@ public:
     Set operator~() const;
     Set operator+(char c) const;
     Set& operator+=(char element);
-    Set operator-(const Set& other) const;
+    Set operator-(char element) const;
     Set& operator-=(char element);
+
+    static const int start = 31;
+    static const int end = 128;
+    static const int charSize = end - start;
 };
 std::ostream& operator<<(std::ostream& stream, const Set& s);
 std::istream& operator>>(std::istream& stream, Set& s);

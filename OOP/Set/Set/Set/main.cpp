@@ -21,7 +21,7 @@ int main() {
     std::cout << "set1 + 'x': " << (set1 + 'x') << std::endl;
     std::cout << "set1 == set2: " << (set1 == set2) << std::endl;
     std::cout << "set1 != set2: " << (set1 != set2) << std::endl;
-    std::cout << "set1 - set3: " << (set1 - set3) << std::endl;
+    std::cout << "set1 - l: " << (set1 -'l') << std::endl;
     std::cout << "Cardinality of set1: " << set1.cardinality() << std::endl;
 
     return 0;
