@@ -1,8 +1,13 @@
 ﻿#include <iostream>
 #include <cstdlib>
-#include <ctime>
+#include <string>
 #include <chrono>
 #include <fstream>
+#include <vector>
+#include <numeric>
+#include <tuple>
+#include <algorithm>
+
 
 void RandMas(int* mas, int n, int a, int b)
 {
@@ -54,98 +59,63 @@ bool Sort(int* mas, int n)
 int main() {
     srand(time(0));
 
-    int size1 = 10000;
-    int size2 = 100000;
-    int size3 = 1000000;
-    int* arr1 = new int[size1];
-    int* arr2 = new int[size2];
-    int* arr3 = new int[size3];
+    int sizes[] = { 10000, 100000, 1000000 };
+    int ranges[][2] = { {-10, 10}, {-1000, 1000}, {-100000, 100000} };
 
-    RandMas(arr1, size1, -10, 10);
-    RandMas(arr2, size2, -1000, 1000);
-    RandMas(arr3, size3, -100000, 100000);
+    std::vector<int*> allArrays;
 
-    std::ofstream file1("array1.txt");
-    std::ofstream file2("array2.txt");
-    std::ofstream file3("array3.txt");
+    for (int sizeIndex = 0; sizeIndex < 3; sizeIndex++) {
+        for (int rangeIndex = 0; rangeIndex < 3; rangeIndex++) {
+            int n = sizes[sizeIndex];
+            int a = ranges[rangeIndex][0];
+            int b = ranges[rangeIndex][1];
 
-    for (int i = 0; i < size1; i++) {
-        file1 << arr1[i] << " ";
-    }
-    for (int i = 0; i < size2; i++) {
-        file2 << arr2[i] << " ";
-    }
-    for (int i = 0; i < size3; i++) {
-        file3 << arr3[i] << " ";
+            int* mas = new int[n];
+            RandMas(mas, n, a, b);
+            allArrays.push_back(mas);
+
+            std::ofstream file("array_" + std::to_string(sizeIndex) + "_" + std::to_string(rangeIndex) + ".txt");
+            for (int i = 0; i < n; i++) {
+                file << mas[i] << " ";
+            }
+            file.close();
+        }
     }
 
-    file1.close();
-    file2.close();
-    file3.close();
+    for (int sizeIndex = 0; sizeIndex < 3; sizeIndex++) {
+        for (int rangeIndex = 0; rangeIndex < 3; rangeIndex++) {
+            int n = sizes[sizeIndex];
+            int a = ranges[rangeIndex][0];
+            int b = ranges[rangeIndex][1];
 
-    pyramidalSort(arr1, size1);
-    pyramidalSort(arr2, size2);
-    pyramidalSort(arr3, size3);
 
-    auto start1 = std::chrono::high_resolution_clock::now();
-    pyramidalSort(arr1, size1);
-    auto end1 = std::chrono::high_resolution_clock::now();
-    auto duration1 = std::chrono::duration_cast<std::chrono::microseconds>(end1 - start1);
+            std::cout << "Размер массива: " << n << std::endl;
+            std::cout << "Диапазон значений: [" << a << ", " << b << "]" << std::endl;
 
-    auto start2 = std::chrono::high_resolution_clock::now();
-    pyramidalSort(arr2, size2);
-    auto end2 = std::chrono::high_resolution_clock::now();
-    auto duration2 = std::chrono::duration_cast<std::chrono::microseconds>(end2 - start2);
+            double totalTime = 0;
+            for (int l = 0; l < 3; ++l) {
 
-    auto start3 = std::chrono::high_resolution_clock::now();
-    pyramidalSort(arr3, size3);
-    auto end3 = std::chrono::high_resolution_clock::now();
-    auto duration3 = std::chrono::duration_cast<std::chrono::microseconds>(end3 - start3);
+                int* mas = new int[n];
+                int arrayIndex = sizeIndex * 3 + rangeIndex;
+                for (int k = 0; k < n; k++) {
+                    mas[k] = allArrays[arrayIndex][k];
+                }
 
-    std::ofstream file1_sorted("array1_sorted.txt");
-    std::ofstream file2_sorted("array2_sorted.txt");
-    std::ofstream file3_sorted("array3_sorted.txt");
+                auto start = std::chrono::high_resolution_clock::now();
+                pyramidalSort(mas, n);
+                auto end = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+                totalTime += duration.count();
 
-    for (int i = 0; i < size1; i++) {
-        file1_sorted << arr1[i] << " ";
+                delete[] mas;
+            }
+
+            std::cout << "Среднее время работы пирамидальной сортировки: " << (totalTime / 3.0) << " микросекунд" << std::endl;
+        }
     }
-    for (int i = 0; i < size2; i++) {
-        file2_sorted << arr2[i] << " ";
+    for (int* arr : allArrays) {
+        delete[] arr;
     }
-    for (int i = 0; i < size3; i++) {
-        file3_sorted << arr3[i] << " ";
-    }
-
-    file1_sorted.close();
-    file2_sorted.close();
-    file3_sorted.close();
-
-    std::cout << "Sorted array 1: ";
-    for (int i = 0; i < size1; i++) {
-        std::cout << arr1[i] << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Sorted array 2: ";
-    for (int i = 0; i < size2; i++) {
-        std::cout << arr2[i] << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Sorted array 3: ";
-    for (int i = 0; i < size3; i++) {
-        std::cout << arr3[i] << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Time taken to sort array 1: " << duration1.count() << " microseconds" << std::endl;
-    std::cout << "Time taken to sort array 2: " << duration2.count() << " microseconds" << std::endl;
-    std::cout << "Time taken to sort array 3: " << duration3.count() << " microseconds" << std::endl;
-
-    delete[] arr1;
-    delete[] arr2;
-    delete[] arr3;
 
     return 0;
 }
-
